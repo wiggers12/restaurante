@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DashControl Enterprise</title>
+
+  <!-- Fonte & Ícones -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/echarts/dist/echarts.min.js"></script>
+
+  <style>
+    body { margin:0; font-family:'Poppins', sans-serif; background:#0d0d0d; color:white; display:flex; height:100vh; }
+    /* Sidebar */
+    .sidebar {
+      width:240px; background:#1a1a1a; padding:20px 0; display:flex; flex-direction:column;
+      box-shadow:2px 0 10px rgba(0,0,0,0.5);
+    }
+    .sidebar h2 { text-align:center; color:#d4af37; margin-bottom:30px; }
+    .sidebar button {
+      background:none; border:none; color:white; padding:15px 20px; text-align:left;
+      font-size:16px; cursor:pointer; width:100%; transition:0.3s;
+    }
+    .sidebar button:hover { background:#8e44ad; }
+    /* Conteúdo */
+    .content { flex:1; padding:20px; overflow-y:auto; }
+    header { font-size:22px; font-weight:700; margin-bottom:20px; color:#d4af37; }
+    /* Cards */
+    .kpis { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:20px; }
+    .card {
+      background:#1e1e1e; border-radius:12px; padding:20px; text-align:center;
+      box-shadow:0 4px 15px rgba(0,0,0,0.6);
+    }
+    .card h3 { margin:0; font-size:18px; color:#d4af37; }
+    .card p { font-size:22px; margin:10px 0 0; font-weight:700; }
+    /* Gráficos */
+    .chart-card { background:#1a1a1a; border-radius:12px; padding:15px; margin:20px 0;
+      box-shadow:0 4px 20px rgba(0,0,0,0.6); }
+    .chart { width:100%; height:350px; }
+    /* Formulários */
+    form { max-width:600px; margin:auto; text-align:left; }
+    label { display:block; margin:10px 0 5px; color:#d4af37; }
+    input, select {
+      width:100%; padding:10px; border:none; border-radius:6px;
+      background:#2c2c2c; color:white;
+    }
+    button.action {
+      background:#8e44ad; border:none; padding:12px; border-radius:6px; color:white; font-weight:600;
+      margin-top:10px; cursor:pointer; transition:0.3s;
+    }
+    button.action:hover { background:#b8860b; }
+    .hidden { display:none; }
+  </style>
+</head>
+<body>
+
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <h2>⚡ DashControl</h2>
+    <button onclick="showPage('dashboard')">📊 Dashboard</button>
+    <button onclick="showPage('estoque')">📦 Estoque</button>
+    <button onclick="showPage('vendas')">🛒 Vendas</button>
+    <button onclick="showPage('financeiro')">💰 Financeiro</button>
+  </div>
+
+  <!-- Conteúdo -->
+  <div class="content">
+    <!-- Dashboard -->
+    <div id="dashboard" class="page">
+      <header>📊 Dashboard</header>
+      <div class="kpis">
+        <div class="card"><h3>💰 Receita Total</h3><p id="kpiReceita">R$ 0</p></div>
+        <div class="card"><h3>🛒 Vendas</h3><p id="kpiVendas">0</p></div>
+        <div class="card"><h3>📦 Estoque</h3><p id="kpiEstoque">0</p></div>
+        <div class="card"><h3>🎯 Ticket Médio</h3><p id="kpiTicket">R$ 0</p></div>
+      </div>
+      <div class="chart-card"><div id="chartVendas" class="chart"></div></div>
+      <div class="chart-card"><div id="chartEstoque" class="chart"></div></div>
+      <div class="chart-card"><div id="chartFinanceiro" class="chart"></div></div>
+      <div class="chart-card"><div id="chartLinha" class="chart"></div></div>
+    </div>
+
+    <!-- Estoque -->
+    <div id="estoque" class="page hidden">
+      <header>📦 Gerenciar Estoque</header>
+      <form id="formEstoque">
+        <label>Produto/Serviço:</label><input type="text" id="nomeProd">
+        <label>Valor (R$):</label><input type="number" id="valorProd">
+        <label>Quantidade:</label><input type="number" id="qtdProd">
+        <button type="button" class="action" onclick="addEstoque()">➕ Adicionar</button>
+      </form>
+    </div>
+
+    <!-- Vendas -->
+    <div id="vendas" class="page hidden">
+      <header>🛒 Registrar Venda</header>
+      <form id="formVenda">
+        <label>Produto:</label><select id="selectVenda"></select>
+        <label>Forma de Pagamento:</label>
+        <select id="pagamento">
+          <option>Pix</option><option>Débito</option><option>Crédito</option><option>Dinheiro</option>
+        </select>
+        <label>Valor Recebido (se dinheiro):</label><input type="number" id="valorRecebido">
+        <button type="button" class="action" onclick="addVenda()">💾 Registrar</button>
+      </form>
+    </div>
+
+    <!-- Financeiro -->
+    <div id="financeiro" class="page hidden">
+      <header>💰 Financeiro</header>
+      <form>
+        <label>Caixa Inicial (R$):</label>
+        <input type="number" id="caixaInicial">
+        <button type="button" class="action" onclick="definirCaixa()">📌 Definir</button>
+      </form>
+      <p>Entradas: R$ <span id="finEntradas">0</span> | Saídas: R$ <span id="finSaidas">0</span> | Saldo: R$ <span id="finSaldo">0</span></p>
+    </div>
+  </div>
+
+<script>
+let dados = JSON.parse(localStorage.getItem("dashEnterprise")) || {estoque:[], vendas:[], financeiro:{caixa:0, entradas:0, saidas:0}};
+
+// Navegação
+function showPage(id){
+  document.querySelectorAll('.page').forEach(p=>p.classList.add('hidden'));
+  document.getElementById(id).classList.remove('hidden');
+  if(id==='dashboard') atualizarDashboard();
+}
+
+// Salvar
+function salvar(){ localStorage.setItem("dashEnterprise", JSON.stringify(dados)); }
+
+// Adicionar Estoque
+function addEstoque(){
+  let nome=document.getElementById("nomeProd").value;
+  let valor=parseFloat(document.getElementById("valorProd").value)||0;
+  let qtd=parseInt(document.getElementById("qtdProd").value)||0;
+  if(!nome||valor<=0){alert("Preencha corretamente");return;}
+  dados.estoque.push({nome,valor,qtd});
+  salvar();alert("✅ Produto adicionado!");
+  atualizarSelect();
+  document.getElementById("formEstoque").reset();
+}
+
+// Atualizar select
+function atualizarSelect(){
+  let sel=document.getElementById("selectVenda"); sel.innerHTML="";
+  dados.estoque.forEach((p,i)=>{
+    let opt=document.createElement("option"); opt.value=i; opt.textContent=p.nome+" (R$"+p.valor+")"; sel.appendChild(opt);
+  });
+}
+
+// Registrar Venda
+function addVenda(){
+  let idx=document.getElementById("selectVenda").value;
+  let prod=dados.estoque[idx];
+  if(!prod){alert("Cadastre um produto primeiro!");return;}
+  let pagamento=document.getElementById("pagamento").value;
+  let recebido=parseFloat(document.getElementById("valorRecebido").value)||prod.valor;
+  let troco=0;if(pagamento==="Dinheiro"&&recebido>prod.valor){troco=recebido-prod.valor;dados.financeiro.saidas+=troco;}
+  if(prod.qtd>0) prod.qtd--;
+  dados.vendas.push({produto:prod.nome,valor:prod.valor,pagamento,data:new Date().toLocaleDateString()});
+  dados.financeiro.entradas+=prod.valor;
+  salvar();alert("✅ Venda registrada!");
+}
+
+// Caixa
+function definirCaixa(){
+  dados.financeiro.caixa=parseFloat(document.getElementById("caixaInicial").value)||0;
+  salvar();atualizarDashboard();alert("💵 Caixa definido!");
+}
+
+// Dashboard
+function atualizarDashboard(){
+  // KPIs
+  let receita=dados.vendas.reduce((s,v)=>s+v.valor,0);
+  let ticket= dados.vendas.length? (receita/dados.vendas.length):0;
+  document.getElementById("kpiReceita").innerText="R$ "+receita.toFixed(2);
+  document.getElementById("kpiVendas").innerText=dados.vendas.length;
+  document.getElementById("kpiEstoque").innerText=dados.estoque.reduce((s,e)=>s+e.qtd,0);
+  document.getElementById("kpiTicket").innerText="R$ "+ticket.toFixed(2);
+
+  // Vendas
+  let vendasPorProd={};dados.vendas.forEach(v=>vendasPorProd[v.produto]=(vendasPorProd[v.produto]||0)+v.valor);
+  echarts.init(document.getElementById("chartVendas")).setOption({
+    title:{text:"🛒 Vendas",textStyle:{color:"#d4af37"}},
+    xAxis:{type:"category",data:Object.keys(vendasPorProd),axisLabel:{color:"#fff"}},
+    yAxis:{type:"value",axisLabel:{color:"#fff"}},
+    series:[{type:"bar",data:Object.values(vendasPorProd),itemStyle:{color:"#8e44ad"}}]
+  });
+  // Estoque
+  echarts.init(document.getElementById("chartEstoque")).setOption({
+    title:{text:"📦 Estoque",textStyle:{color:"#d4af37"}},
+    xAxis:{type:"category",data:dados.estoque.map(e=>e.nome),axisLabel:{color:"#fff"}},
+    yAxis:{type:"value",axisLabel:{color:"#fff"}},
+    series:[{type:"bar",data:dados.estoque.map(e=>e.qtd),itemStyle:{color:"#1abc9c"}}]
+  });
+  // Financeiro
+  echarts.init(document.getElementById("chartFinanceiro")).setOption({
+    title:{text:"💰 Financeiro",textStyle:{color:"#d4af37"}},
+    series:[{type:"pie",radius:["40%","70%"],data:[
+      {name:"Entradas",value:dados.financeiro.entradas},
+      {name:"Saídas",value:dados.financeiro.saidas}
+    ]}]
+  });
+  // Receita no Tempo
+  let porData={};dados.vendas.forEach(v=>porData[v.data]=(porData[v.data]||0)+v.valor);
+  echarts.init(document.getElementById("chartLinha")).setOption({
+    title:{text:"📈 Receita no Tempo",textStyle:{color:"#d4af37"}},
+    xAxis:{type:"category",data:Object.keys(porData),axisLabel:{color:"#fff"}},
+    yAxis:{type:"value",axisLabel:{color:"#fff"}},
+    series:[{type:"line",smooth:true,data:Object.values(porData),itemStyle:{color:"#d4af37"}}]
+  });
+}
+
+// Inicialização
+showPage('dashboard');
+atualizarSelect();
+</script>
+
+</body>
+</html>
