@@ -104,9 +104,10 @@
         border-radius: 50%;
         object-fit: cover;
     }
+    /* Estilos responsivos para o menu */
     @media (max-width: 600px) {
-        nav { flex-direction: column; align-items: center; }
-        nav button { width: 90%; }
+        nav { flex-direction: row; justify-content: space-around; }
+        nav button { width: auto; padding: 10px; font-size: 12px; }
         .produtos-container { flex-direction: column; align-items: center; }
         .prod-btn { width: 90%; height: auto; flex-direction: row; justify-content: flex-start; }
         .prod-btn .icon { margin-right: 15px; }
