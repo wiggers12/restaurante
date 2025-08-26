@@ -21,11 +21,13 @@
     .list div { padding:6px 0; border-bottom:1px solid #333; }
     .chart-card { background:#1a1a1a; border-radius:12px; padding:15px; margin:20px auto; box-shadow:0 4px 20px rgba(0,0,0,0.6); max-width:1200px; }
     .chart { width:100%; height:400px; }
-    .prod-btn { font-size:22px; padding:15px; margin:10px; border:none; border-radius:10px; background:#2c2c2c; color:white; cursor:pointer; width:120px; height:120px; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+    .prod-btn { font-size:18px; padding:10px; margin:10px; border:none; border-radius:10px; background:#2c2c2c; color:white; cursor:pointer; width:140px; height:120px; display:flex; flex-direction:column; align-items:center; justify-content:center; }
     .prod-btn:hover { background:#8e44ad; transform:scale(1.05); }
-    .pay-btn { font-size:20px; padding:20px; margin:10px; border:none; border-radius:10px; background:#2c2c2c; color:white; cursor:pointer; width:150px; }
-    .pay-btn:hover { background:#27ae60; transform:scale(1.05); }
+    .pay-btn { font-size:18px; padding:15px; margin:8px; border:none; border-radius:10px; cursor:pointer; width:130px; color:white; }
+    .pay-pix { background:#27ae60; } .pay-debito { background:#2980b9; } .pay-credito { background:#8e44ad; } .pay-dinheiro { background:#f39c12; }
+    .pay-btn:hover { opacity:0.9; transform:scale(1.05); }
     .kpi { background:#1a1a1a; display:inline-block; padding:15px; border-radius:10px; margin:10px; min-width:150px; font-size:14px; }
+    .low-stock { color:#e74c3c; font-weight:bold; }
   </style>
 </head>
 <body>
@@ -73,7 +75,8 @@
 <section id="dashboard">
   <h2>📊 Dashboard</h2>
   <div class="kpi">Receita Total: R$ <span id="kpiReceita">0</span></div>
-  <div class="kpi">Saldo: R$ <span id="kpiSaldo">0</span></div>
+  <div class="kpi">Lucro Estimado: R$ <span id="kpiLucro">0</span></div>
+  <div class="kpi">Ticket Médio: R$ <span id="kpiTicket">0</span></div>
   <div class="kpi">Produtos em Estoque: <span id="kpiEstoque">0</span></div>
   <div class="chart-card"><div id="chartVendas" class="chart"></div></div>
   <div class="chart-card"><div id="chartGarcons" class="chart"></div></div>
@@ -83,9 +86,17 @@
 </section>
 
 <script>
-let dados = JSON.parse(localStorage.getItem("restaurante")) || {garcons:["João","Maria"], mesas:[], estoque:[{nome:"Pizza",icone:"🍕",valor:40,qtd:10},{nome:"Cerveja",icone:"🍺",valor:8,qtd:30},{nome:"Refrigerante",icone:"🥤",valor:6,qtd:20},{nome:"Hambúrguer",icone:"🍔",valor:25,qtd:15}], vendas:[], financeiro:{entradas:0,saidas:0,saldo:0}};
-
+let dados = JSON.parse(localStorage.getItem("restaurante")) || {
+  garcons:["João","Maria"], 
+  mesas:[], 
+  estoque:[{nome:"Pizza",icone:"🍕",valor:40,qtd:10,compra:25},
+           {nome:"Cerveja",icone:"🍺",valor:8,qtd:30,compra:3},
+           {nome:"Refrigerante",icone:"🥤",valor:6,qtd:20,compra:2}],
+  vendas:[], 
+  financeiro:{entradas:0,saidas:0,saldo:0,lucro:0}
+};
 function save(){ localStorage.setItem("restaurante",JSON.stringify(dados)); }
+function beep(){ new Audio("https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg").play(); }
 
 // Navegação
 function showTab(tab){
@@ -102,7 +113,7 @@ function abrirMesa(garcom,mesa){
   if(!garcom||!mesa){alert("Preencha garçom e mesa!");return;}
   if(dados.mesas.find(m=>m.numero==mesa&&m.aberta)){alert("Mesa já aberta!");return;}
   dados.mesas.push({numero:mesa,garcom,pedidos:[],aberta:true});
-  save();renderMesas();alert("✅ Mesa aberta!");
+  save();renderMesas();beep();
 }
 function addPedido(idx){
   let garcom=document.getElementById("garcomNome").value;
@@ -112,13 +123,15 @@ function addPedido(idx){
   if(!mesaObj){abrirMesa(garcom,mesa); mesaObj=dados.mesas.find(m=>m.numero==mesa&&m.aberta);}
   let produto=dados.estoque[idx];
   if(produto.qtd<=0){alert("Estoque insuficiente!");return;}
-  mesaObj.pedidos.push({produto:produto.nome,valor:produto.valor,qtd:1});
+  mesaObj.pedidos.push({produto:produto.nome,valor:produto.valor,qtd:1,compra:produto.compra});
   produto.qtd--;
-  save();renderMesas();alert("✅ Pedido adicionado!");
+  save();renderMesas();beep();
 }
 function renderMesas(){
   let html=""; dados.mesas.filter(m=>m.aberta).forEach(m=>{
-    html+=`<div>Mesa ${m.numero} - Garçom: ${m.garcom}<br>Pedidos: ${m.pedidos.map(p=>`${p.qtd}x ${p.produto}`).join(", ")||"Nenhum"}</div>`;
+    let total=m.pedidos.reduce((s,p)=>s+p.valor*p.qtd,0);
+    html+=`<div><b>Mesa ${m.numero}</b> - Garçom: ${m.garcom} - Total Parcial R$${total}<br>
+      Pedidos: ${m.pedidos.map(p=>`${p.qtd}x ${p.produto}`).join(", ")||"Nenhum"}</div>`;
   });
   document.getElementById("listaMesas").innerHTML=html||"<p>Sem mesas abertas.</p>";
 }
@@ -135,21 +148,23 @@ function renderProdutosBtns(){
 function renderCaixa(){
   let html=""; dados.mesas.filter(m=>m.aberta).forEach((m,i)=>{
     let total=m.pedidos.reduce((s,p)=>s+p.valor*p.qtd,0);
-    html+=`<div><b>Mesa ${m.numero}</b> - Garçom: ${m.garcom} - Total R$${total}<br>
-      <button class="pay-btn" onclick="encerrarMesa(${i},'Pix')">⚡ Pix</button>
-      <button class="pay-btn" onclick="encerrarMesa(${i},'Débito')">💳 Débito</button>
-      <button class="pay-btn" onclick="encerrarMesa(${i},'Crédito')">💳 Crédito</button>
-      <button class="pay-btn" onclick="encerrarMesa(${i},'Dinheiro')">💵 Dinheiro</button></div>`;
+    html+=`<div><b>Mesa ${m.numero}</b> - Garçom: ${m.garcom}<br>Itens: ${m.pedidos.map(p=>`${p.qtd}x ${p.produto}`).join(", ")}
+      <br><b>Total: R$${total}</b><br>
+      <button class="pay-btn pay-pix" onclick="encerrarMesa(${i},'Pix')">⚡ Pix</button>
+      <button class="pay-btn pay-debito" onclick="encerrarMesa(${i},'Débito')">💳 Débito</button>
+      <button class="pay-btn pay-credito" onclick="encerrarMesa(${i},'Crédito')">💳 Crédito</button>
+      <button class="pay-btn pay-dinheiro" onclick="encerrarMesa(${i},'Dinheiro')">💵 Dinheiro</button></div><hr>`;
   });
   document.getElementById("mesasAbertas").innerHTML=html||"<p>Nenhuma mesa aberta.</p>";
 }
 function encerrarMesa(idx,pagamento){
   let mesa=dados.mesas[idx];
   let total=mesa.pedidos.reduce((s,p)=>s+p.valor*p.qtd,0);
-  dados.vendas.push({mesa:mesa.numero,garcom:mesa.garcom,total,pagamento,data:new Date().toLocaleDateString()});
-  dados.financeiro.entradas+=total; dados.financeiro.saldo+=total;
+  let lucro=mesa.pedidos.reduce((s,p)=>s+(p.valor-p.compra)*p.qtd,0);
+  dados.vendas.push({mesa:mesa.numero,garcom:mesa.garcom,total,pagamento,data:new Date().toLocaleDateString(),lucro});
+  dados.financeiro.entradas+=total; dados.financeiro.lucro+=lucro; dados.financeiro.saldo+=total;
   mesa.aberta=false;
-  save();renderCaixa();alert("✅ Mesa encerrada!");
+  save();renderCaixa();beep();alert("✅ Mesa encerrada!");
 }
 
 // ⚙️ Admin
@@ -159,11 +174,11 @@ function addEstoque(){
   let valor=parseFloat(document.getElementById("estValor").value)||0;
   let qtd=parseInt(document.getElementById("estQtd").value)||0;
   if(!nome||valor<=0){alert("Preencha todos os campos!");return;}
-  dados.estoque.push({nome,icone,valor,qtd});
+  dados.estoque.push({nome,icone,valor,qtd,compra:valor*0.6}); // custo estimado
   save();renderEstoque();alert("✅ Produto adicionado!");
 }
 function renderEstoque(){
-  let html=""; dados.estoque.forEach(e=>{html+=`<div>${e.icone||"🍽️"} ${e.nome} - R$${e.valor} | Qtd:${e.qtd}</div>`;});
+  let html=""; dados.estoque.forEach((e,i)=>{html+=`<div>${e.icone||"🍽️"} ${e.nome} - R$${e.valor} | Qtd:${e.qtd} ${e.qtd<5?'<span class="low-stock">(baixo estoque)</span>':''}</div>`;});
   document.getElementById("listaEstoque").innerHTML=html||"<p>Sem produtos.</p>";
   renderProdutosBtns();
 }
@@ -181,7 +196,8 @@ function renderGarcons(){
 // 📊 Dashboard
 function renderDashboard(){
   document.getElementById("kpiReceita").innerText=dados.financeiro.entradas;
-  document.getElementById("kpiSaldo").innerText=dados.financeiro.saldo;
+  document.getElementById("kpiLucro").innerText=dados.financeiro.lucro;
+  document.getElementById("kpiTicket").innerText=(dados.financeiro.entradas/(dados.vendas.length||1)).toFixed(2);
   document.getElementById("kpiEstoque").innerText=dados.estoque.reduce((s,p)=>s+p.qtd,0);
 
   // Vendas por Produto
