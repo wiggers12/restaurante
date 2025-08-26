@@ -3,254 +3,177 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>DashControl Enterprise++</title>
+  <title>🍽️ Restaurante Control</title>
   <script src="https://cdn.jsdelivr.net/npm/echarts/dist/echarts.min.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
   <style>
     body { margin:0; font-family:'Poppins',sans-serif; background:#0d0d0d; color:white; }
-    header { background:linear-gradient(90deg,#8e44ad,#b8860b); padding:15px; font-size:22px; font-weight:700; text-align:center; }
+    header { background:linear-gradient(90deg,#8e44ad,#b8860b); padding:15px; text-align:center; font-size:22px; font-weight:700; }
     nav { display:flex; justify-content:center; flex-wrap:wrap; background:#1e1e1e; }
-    nav button { background:#8e44ad; border:none; margin:5px; padding:10px 15px; border-radius:8px; color:white; font-weight:bold; cursor:pointer; }
+    nav button { background:#8e44ad; border:none; margin:5px; padding:10px 15px; border-radius:6px; cursor:pointer; color:white; font-weight:600; }
     nav button:hover { background:#b8860b; }
-    section { display:none; padding:20px; max-width:1100px; margin:auto; }
-    h2 { color:#d4af37; margin:15px 0; }
-    input, select { padding:10px; border:none; border-radius:6px; width:100%; margin:5px 0; background:#2c2c2c; color:white; }
-    .btn { background:#8e44ad; padding:10px; margin:5px; border-radius:6px; cursor:pointer; border:none; color:white; font-weight:bold; }
+    section { display:none; padding:20px; max-width:1000px; margin:auto; }
+    h2 { color:#d4af37; margin-bottom:10px; }
+    input, select { width:100%; padding:10px; margin:5px 0; border:none; border-radius:6px; background:#2c2c2c; color:white; }
+    .btn { background:#8e44ad; padding:10px; margin:5px 0; border:none; border-radius:6px; cursor:pointer; color:white; font-weight:bold; }
     .btn:hover { background:#b8860b; }
-    .chart-card { background:#1a1a1a; border-radius:12px; padding:15px; margin:20px auto; box-shadow:0 4px 20px rgba(0,0,0,0.6); max-width:1200px; }
-    .chart { width:100%; height:400px; }
-    .kpi { background:#1a1a1a; display:inline-block; padding:15px; border-radius:10px; margin:10px; min-width:180px; font-size:14px; }
     .list { background:#1a1a1a; border-radius:8px; padding:10px; margin-top:10px; }
     .list div { padding:6px 0; border-bottom:1px solid #333; }
+    .chart-card { background:#1a1a1a; border-radius:12px; padding:15px; margin:20px auto; box-shadow:0 4px 15px rgba(0,0,0,0.6); max-width:1200px; }
+    .chart { width:100%; height:400px; }
+    .kpi { display:inline-block; background:#1a1a1a; padding:10px; margin:5px; border-radius:6px; min-width:150px; text-align:center; }
   </style>
 </head>
 <body>
-<header>📊 DashControl Enterprise++</header>
+
+<header>🍽️ Restaurante Control</header>
 <nav>
-  <button onclick="showTab('estoque')">📦 Estoque</button>
-  <button onclick="showTab('vendas')">🛒 Vendas</button>
-  <button onclick="showTab('financeiro')">💰 Financeiro</button>
-  <button onclick="showTab('dashboard')">📈 Dashboard</button>
-  <button onclick="showTab('relatorios')">📑 Relatórios</button>
+  <button onclick="showTab('garcom')">🧑 Garçom</button>
+  <button onclick="showTab('admin')">⚙️ Admin</button>
+  <button onclick="showTab('dashboard')">📊 Dashboard</button>
 </nav>
 
-<!-- 📦 Estoque -->
-<section id="estoque">
-  <h2>📦 Gestão de Estoque</h2>
-  <input type="text" id="estNome" placeholder="Nome do Produto/Serviço">
-  <input type="number" id="estCompra" placeholder="Valor de Compra (R$)">
-  <input type="number" id="estVenda" placeholder="Valor de Venda (R$)">
-  <input type="number" id="estQtd" placeholder="Quantidade (deixe vazio se for serviço)">
-  <button class="btn" onclick="addEstoque()">➕ Adicionar</button>
+<!-- 🧑 Garçom -->
+<section id="garcom">
+  <h2>🧑 Garçom - Abrir Mesa</h2>
+  <input type="text" id="garcomNome" placeholder="Nome do Garçom">
+  <input type="number" id="mesaNumero" placeholder="Número da Mesa">
+  <select id="pedidoProduto"></select>
+  <button class="btn" onclick="addPedido()">➕ Adicionar Pedido</button>
+  <div class="list" id="listaPedidos"></div>
+</section>
+
+<!-- ⚙️ Admin -->
+<section id="admin">
+  <h2>📦 Estoque</h2>
+  <input type="text" id="estNome" placeholder="Produto">
+  <input type="number" id="estPreco" placeholder="Preço (R$)">
+  <input type="number" id="estQtd" placeholder="Quantidade">
+  <button class="btn" onclick="addEstoque()">➕ Adicionar Produto</button>
   <div class="list" id="listaEstoque"></div>
-</section>
 
-<!-- 🛒 Vendas -->
-<section id="vendas">
-  <h2>🛒 Registrar Venda</h2>
-  <select id="venProduto"></select>
-  <input type="number" id="venValor" placeholder="Valor" readonly>
-  <select id="venPagamento">
-    <option>Pix</option><option>Débito</option><option>Crédito</option><option>Dinheiro</option>
-  </select>
-  <input type="number" id="venRecebido" placeholder="Valor Recebido (se Dinheiro)">
-  <input type="date" id="venData">
-  <button class="btn" onclick="addVenda()">💾 Registrar Venda</button>
-  <div class="list" id="listaVendas"></div>
-</section>
-
-<!-- 💰 Financeiro -->
-<section id="financeiro">
-  <h2>💰 Controle Financeiro</h2>
-  <input type="number" id="caixaInicial" placeholder="Caixa Inicial do Dia">
-  <button class="btn" onclick="setCaixa()">📌 Definir Caixa</button>
+  <h2>💰 Caixa</h2>
+  <input type="number" id="caixaInicial" placeholder="Caixa Inicial (R$)">
+  <button class="btn" onclick="definirCaixa()">📌 Definir Caixa</button>
   <div class="kpi">Entradas: R$ <span id="finEntradas">0</span></div>
   <div class="kpi">Saídas: R$ <span id="finSaidas">0</span></div>
-  <div class="kpi">Lucro: R$ <span id="finLucro">0</span></div>
   <div class="kpi">Saldo: R$ <span id="finSaldo">0</span></div>
+
+  <h2>🧾 Mesas Abertas</h2>
+  <div class="list" id="listaMesas"></div>
 </section>
 
-<!-- 📈 Dashboard -->
+<!-- 📊 Dashboard -->
 <section id="dashboard">
-  <h2>📊 Dashboard Premium</h2>
+  <h2>📊 Dashboard</h2>
   <div class="kpi">Receita Total: R$ <span id="kpiReceita">0</span></div>
-  <div class="kpi">Lucro Total: R$ <span id="kpiLucro">0</span></div>
   <div class="kpi">Ticket Médio: R$ <span id="kpiTicket">0</span></div>
-  <div class="kpi">Margem Média: <span id="kpiMargem">0%</span></div>
-  <div class="chart-card"><div id="chartVendas" class="chart"></div></div>
-  <div class="chart-card"><div id="chartFinanceiro" class="chart"></div></div>
-  <div class="chart-card"><div id="chartEstoque" class="chart"></div></div>
+  <div class="chart-card"><div id="chartProdutos" class="chart"></div></div>
+  <div class="chart-card"><div id="chartGarcons" class="chart"></div></div>
   <div class="chart-card"><div id="chartPagamentos" class="chart"></div></div>
-  <div class="chart-card"><div id="chartLinha" class="chart"></div></div>
-  <div class="chart-card"><div id="chartLucro" class="chart"></div></div>
-</section>
-
-<!-- 📑 Relatórios -->
-<section id="relatorios">
-  <h2>📑 Relatórios</h2>
-  <label>Data inicial:</label>
-  <input type="date" id="dataInicio">
-  <label>Data final:</label>
-  <input type="date" id="dataFim">
-  <button class="btn" onclick="gerarRelatorio()">📊 Gerar Relatório</button>
-  <button class="btn" onclick="exportCSV()">⬇ Exportar CSV</button>
-  <div class="list" id="resultadoRelatorio"></div>
 </section>
 
 <script>
-let dados = JSON.parse(localStorage.getItem("enterprise")) || {estoque:[], vendas:[], financeiro:{caixa:0, entradas:0, saidas:0, lucro:0, saldo:0}};
+let db = JSON.parse(localStorage.getItem("restaurante")) || {estoque:[], pedidos:[], financeiro:{caixa:0, entradas:0, saidas:0, saldo:0}};
 
 // Navegação
 function showTab(tab){
   document.querySelectorAll("section").forEach(s=>s.style.display="none");
   document.getElementById(tab).style.display="block";
-  if(tab==="estoque") renderEstoque();
-  if(tab==="vendas") renderVendas();
-  if(tab==="financeiro") renderFinanceiro();
+  if(tab==="garcom") renderProdutos();
+  if(tab==="admin"){ renderEstoque(); renderMesas(); renderFinanceiro(); }
   if(tab==="dashboard") renderDashboard();
 }
+function save(){ localStorage.setItem("restaurante",JSON.stringify(db)); }
 
-// Salvar Local
-function save(){ localStorage.setItem("enterprise",JSON.stringify(dados)); }
+// 🧑 Garçom
+function renderProdutos(){
+  let sel=document.getElementById("pedidoProduto"); sel.innerHTML="";
+  db.estoque.forEach((p,i)=>{ if(p.qtd>0){ let opt=document.createElement("option"); opt.value=i; opt.textContent=`${p.nome} (R$${p.preco})`; sel.appendChild(opt); } });
+}
+function addPedido(){
+  let garcom=document.getElementById("garcomNome").value;
+  let mesa=document.getElementById("mesaNumero").value;
+  let idx=document.getElementById("pedidoProduto").value;
+  if(!garcom||!mesa||idx===""){alert("Preencha todos os campos!");return;}
+  let prod=db.estoque[idx]; if(prod.qtd<=0){alert("Produto sem estoque!");return;}
+  prod.qtd--;
+  db.pedidos.push({garcom,mesa,produto:prod.nome,preco:prod.preco,data:new Date().toISOString().split("T")[0]});
+  db.financeiro.entradas+=prod.preco; db.financeiro.saldo=db.financeiro.caixa+db.financeiro.entradas-db.financeiro.saidas;
+  save(); renderPedidos(mesa); renderMesas(); renderFinanceiro(); alert("✅ Pedido adicionado!");
+}
+function renderPedidos(mesa){
+  let html=""; db.pedidos.filter(p=>p.mesa==mesa).forEach(p=>{html+=`<div>${p.produto} - R$${p.preco} (${p.garcom})</div>`;});
+  document.getElementById("listaPedidos").innerHTML=html||"<p>Sem pedidos.</p>";
+}
 
-// 📦 Estoque
+// ⚙️ Admin
 function addEstoque(){
   let nome=document.getElementById("estNome").value;
-  let compra=parseFloat(document.getElementById("estCompra").value)||0;
-  let venda=parseFloat(document.getElementById("estVenda").value)||0;
-  let qtd=document.getElementById("estQtd").value===""?null:parseInt(document.getElementById("estQtd").value);
-  if(!nome||!venda){alert("Preencha nome e valor de venda!");return;}
-  dados.estoque.push({nome,compra,venda,qtd});
-  save(); renderEstoque(); alert("✅ Produto adicionado!");
+  let preco=parseFloat(document.getElementById("estPreco").value);
+  let qtd=parseInt(document.getElementById("estQtd").value);
+  if(!nome||!preco||!qtd){alert("Preencha todos os campos!");return;}
+  db.estoque.push({nome,preco,qtd}); save(); renderEstoque(); alert("✅ Produto adicionado!");
 }
 function renderEstoque(){
-  let html=""; 
-  dados.estoque.forEach((e,i)=>{
-    let margem = e.compra ? (((e.venda-e.compra)/e.compra)*100).toFixed(1)+"%" : "—";
-    html+=`<div>${e.nome} - Compra R$${e.compra} | Venda R$${e.venda} | Qtd: ${e.qtd??'Serviço'} | Margem: ${margem}</div>`;
-  });
-  document.getElementById("listaEstoque").innerHTML=html||"<p>Sem itens.</p>";
-  let sel=document.getElementById("venProduto"); sel.innerHTML="";
-  dados.estoque.forEach((p,i)=>{let opt=document.createElement("option");opt.value=i;opt.textContent=`${p.nome} (R$${p.venda})`;sel.appendChild(opt);});
+  let html=""; db.estoque.forEach(e=>{html+=`<div>${e.nome} - R$${e.preco} | Qtd: ${e.qtd}</div>`;});
+  document.getElementById("listaEstoque").innerHTML=html||"<p>Sem estoque.</p>";
 }
-
-// 🛒 Vendas
-function addVenda(){
-  let idx=document.getElementById("venProduto").value;
-  let prod=dados.estoque[idx];
-  let valor=prod.venda;
-  let pagamento=document.getElementById("venPagamento").value;
-  let recebido=parseFloat(document.getElementById("venRecebido").value)||valor;
-  let data=document.getElementById("venData").value||new Date().toISOString().split("T")[0];
-  let troco=0;
-  if(pagamento==="Dinheiro"&&recebido>valor){troco=recebido-valor; dados.financeiro.saidas+=troco;}
-  if(prod.qtd!==null&&prod.qtd>0){prod.qtd--;}
-  let lucro=valor-(prod.compra||0);
-  dados.vendas.push({produto:prod.nome,valor,pagamento,data,lucro});
-  dados.financeiro.entradas+=valor; dados.financeiro.lucro+=lucro;
-  dados.financeiro.saldo=(dados.financeiro.caixa||0)+dados.financeiro.entradas-dados.financeiro.saidas;
-  save(); renderVendas(); alert("✅ Venda registrada!");
-}
-function renderVendas(){
-  let html=""; dados.vendas.slice(-5).forEach(v=>{html+=`<div>${v.data} | ${v.produto} - R$${v.valor} (${v.pagamento}) [Lucro R$${v.lucro}]</div>`;});
-  document.getElementById("listaVendas").innerHTML=html||"<p>Sem vendas.</p>";
-}
-
-// 💰 Financeiro
-function setCaixa(){
-  dados.financeiro.caixa=parseFloat(document.getElementById("caixaInicial").value)||0;
-  dados.financeiro.saldo=dados.financeiro.caixa+dados.financeiro.entradas-dados.financeiro.saidas;
-  save(); renderFinanceiro();
+function definirCaixa(){
+  db.financeiro.caixa=parseFloat(document.getElementById("caixaInicial").value)||0;
+  db.financeiro.saldo=db.financeiro.caixa+db.financeiro.entradas-db.financeiro.saidas;
+  save(); renderFinanceiro(); alert("💵 Caixa inicial definido!");
 }
 function renderFinanceiro(){
-  document.getElementById("finEntradas").innerText=dados.financeiro.entradas.toFixed(2);
-  document.getElementById("finSaidas").innerText=dados.financeiro.saidas.toFixed(2);
-  document.getElementById("finLucro").innerText=dados.financeiro.lucro.toFixed(2);
-  document.getElementById("finSaldo").innerText=dados.financeiro.saldo.toFixed(2);
+  document.getElementById("finEntradas").innerText=db.financeiro.entradas;
+  document.getElementById("finSaidas").innerText=db.financeiro.saidas;
+  document.getElementById("finSaldo").innerText=db.financeiro.saldo;
+}
+function renderMesas(){
+  let mesas=[...new Set(db.pedidos.map(p=>p.mesa))];
+  let html=""; mesas.forEach(m=>{
+    let total=db.pedidos.filter(p=>p.mesa==m).reduce((s,p)=>s+p.preco,0);
+    html+=`<div>Mesa ${m} - Total R$${total} <button onclick="fecharMesa('${m}')">Encerrar</button></div>`;
+  });
+  document.getElementById("listaMesas").innerHTML=html||"<p>Nenhuma mesa aberta.</p>";
+}
+function fecharMesa(mesa){
+  if(confirm("Encerrar mesa "+mesa+"?")){ db.pedidos=db.pedidos.filter(p=>p.mesa!=mesa); save(); renderMesas(); renderPedidos(mesa); renderDashboard(); }
 }
 
 // 📊 Dashboard
 function renderDashboard(){
-  document.getElementById("kpiReceita").innerText=dados.financeiro.entradas.toFixed(2);
-  document.getElementById("kpiLucro").innerText=dados.financeiro.lucro.toFixed(2);
-  document.getElementById("kpiTicket").innerText=(dados.financeiro.entradas/(dados.vendas.length||1)).toFixed(2);
-  let margemMedia=0;
-  if(dados.vendas.length){margemMedia=(dados.vendas.reduce((s,v)=>s+v.lucro,0)/dados.vendas.reduce((s,v)=>s+v.valor,0))*100;}
-  document.getElementById("kpiMargem").innerText=margemMedia.toFixed(1)+"%";
+  document.getElementById("kpiReceita").innerText=db.financeiro.entradas;
+  document.getElementById("kpiTicket").innerText=(db.financeiro.entradas/(db.pedidos.length||1)).toFixed(2);
 
   // Vendas por Produto
-  let porProd={}; dados.vendas.forEach(v=>{porProd[v.produto]=(porProd[v.produto]||0)+v.valor;});
-  echarts.init(document.getElementById("chartVendas")).setOption({
+  let porProd={}; db.pedidos.forEach(p=>{porProd[p.produto]=(porProd[p.produto]||0)+p.preco;});
+  echarts.init(document.getElementById("chartProdutos")).setOption({
     title:{text:"🛒 Vendas por Produto",textStyle:{color:"#d4af37"}},
     xAxis:{type:"category",data:Object.keys(porProd),axisLabel:{color:"#fff"}},
     yAxis:{type:"value",axisLabel:{color:"#fff"}},
     series:[{type:"bar",data:Object.values(porProd),label:{show:true,color:"#fff"}}]
   });
 
-  // Financeiro
-  echarts.init(document.getElementById("chartFinanceiro")).setOption({
-    title:{text:"💰 Financeiro",textStyle:{color:"#d4af37"}},
-    xAxis:{type:"category",data:["Entradas","Saídas","Lucro"],axisLabel:{color:"#fff"}},
+  // Vendas por Garçom
+  let porGar={}; db.pedidos.forEach(p=>{porGar[p.garcom]=(porGar[p.garcom]||0)+p.preco;});
+  echarts.init(document.getElementById("chartGarcons")).setOption({
+    title:{text:"🧑 Vendas por Garçom",textStyle:{color:"#d4af37"}},
+    xAxis:{type:"category",data:Object.keys(porGar),axisLabel:{color:"#fff"}},
     yAxis:{type:"value",axisLabel:{color:"#fff"}},
-    series:[{type:"bar",data:[dados.financeiro.entradas,dados.financeiro.saidas,dados.financeiro.lucro],label:{show:true,color:"#fff"}}]
+    series:[{type:"bar",data:Object.values(porGar),label:{show:true,color:"#fff"}}]
   });
 
-  // Estoque
-  echarts.init(document.getElementById("chartEstoque")).setOption({
-    title:{text:"📦 Estoque",textStyle:{color:"#d4af37"}},
-    xAxis:{type:"category",data:dados.estoque.map(p=>p.nome),axisLabel:{color:"#fff"}},
-    yAxis:{type:"value",axisLabel:{color:"#fff"}},
-    series:[{type:"bar",data:dados.estoque.map(p=>p.qtd??0),label:{show:true,color:"#fff"}}]
-  });
-
-  // Pagamentos
-  let formas={}; dados.vendas.forEach(v=>{formas[v.pagamento]=(formas[v.pagamento]||0)+v.valor;});
+  // Formas de Pagamento (simulado como tudo Pix por enquanto)
+  let formas={Pix:db.financeiro.entradas};
   echarts.init(document.getElementById("chartPagamentos")).setOption({
-    title:{text:"💳 Formas de Pagamento",textStyle:{color:"#d4af37"}},
+    title:{text:"💳 Pagamentos",textStyle:{color:"#d4af37"}},
     series:[{type:"pie",radius:["40%","70%"],data:Object.entries(formas).map(([k,v])=>({name:k,value:v})),label:{show:true,color:"#fff"}}]
   });
-
-  // Receita no Tempo
-  let porData={}; dados.vendas.forEach(v=>{porData[v.data]=(porData[v.data]||0)+v.valor;});
-  echarts.init(document.getElementById("chartLinha")).setOption({
-    title:{text:"📈 Receita no Tempo",textStyle:{color:"#d4af37"}},
-    xAxis:{type:"category",data:Object.keys(porData),axisLabel:{color:"#fff"}},
-    yAxis:{type:"value",axisLabel:{color:"#fff"}},
-    series:[{type:"line",data:Object.values(porData),smooth:true,areaStyle:{color:"rgba(212,175,55,0.3)"},label:{show:true,color:"#fff"}}]
-  });
-
-  // Lucro no Tempo
-  let lucroData={}; dados.vendas.forEach(v=>{lucroData[v.data]=(lucroData[v.data]||0)+v.lucro;});
-  echarts.init(document.getElementById("chartLucro")).setOption({
-    title:{text:"📈 Lucro no Tempo",textStyle:{color:"#d4af37"}},
-    xAxis:{type:"category",data:Object.keys(lucroData),axisLabel:{color:"#fff"}},
-    yAxis:{type:"value",axisLabel:{color:"#fff"}},
-    series:[{type:"line",data:Object.values(lucroData),smooth:true,areaStyle:{color:"rgba(46,204,113,0.3)"},label:{show:true,color:"#fff"}}]
-  });
 }
 
-// 📑 Relatórios
-function gerarRelatorio(){
-  let ini=document.getElementById("dataInicio").value;
-  let fim=document.getElementById("dataFim").value;
-  let filtradas=dados.vendas.filter(v=>(!ini||v.data>=ini)&&(!fim||v.data<=fim));
-  let html="";
-  let total=0;
-  filtradas.forEach(v=>{total+=v.valor; html+=`<div>${v.data} - ${v.produto} R$${v.valor} (${v.pagamento})</div>`;});
-  document.getElementById("resultadoRelatorio").innerHTML=html||"<p>Nenhum dado encontrado.</p>";
-}
-function exportCSV(){
-  let rows=[["Data","Produto","Valor","Pagamento","Lucro"]];
-  dados.vendas.forEach(v=>{rows.push([v.data,v.produto,v.valor,v.pagamento,v.lucro]);});
-  let csv=rows.map(r=>r.join(",")).join("\n");
-  let blob=new Blob([csv],{type:"text/csv"});
-  let url=URL.createObjectURL(blob);
-  let a=document.createElement("a");
-  a.href=url;a.download="relatorio.csv";a.click();
-}
-
-// Inicialização
-showTab("estoque");
+// Inicializa na aba Garçom
+showTab("garcom");
 </script>
 </body>
 </html>
