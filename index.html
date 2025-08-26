@@ -26,7 +26,7 @@
     .chart { width:100%; height:400px; }
     .prod-btn { font-size:18px; padding:10px; margin:10px; border:none; border-radius:10px; background:#2c2c2c; color:white; cursor:pointer; width:140px; height:120px; display:flex; flex-direction:column; align-items:center; justify-content:center; }
     .prod-btn:hover { background:#8e44ad; transform:scale(1.05); }
-    .pay-btn { font-size:18px; padding:15px; margin:8px; border:none; border-radius:10px; cursor:pointer; width:130px; color:white; }
+    .pay-btn { font-size:16px; padding:10px; margin:5px; border:none; border-radius:8px; cursor:pointer; width:100px; color:white; }
     .pay-pix { background:#27ae60; } .pay-debito { background:#2980b9; } .pay-credito { background:#8e44ad; } .pay-dinheiro { background:#f39c12; }
     .pay-btn:hover { opacity:0.9; transform:scale(1.05); }
     .kpi { background:#1a1a1a; display:inline-block; padding:15px; border-radius:10px; margin:10px; min-width:150px; font-size:14px; }
@@ -49,11 +49,11 @@
 
     /* Estilos para o novo layout do Caixa */
     .mesas-container { display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; }
-    .mesa-figura { background: #1a1a1a; border-radius: 12px; padding: 20px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.4); width: 220px; transition: transform 0.2s; }
-    .mesa-figura:hover { transform: translateY(-5px); }
-    .mesa-figura h4 { color: #d4af37; margin: 0 0 10px 0; font-size: 1.2rem; }
-    .mesa-figura p { margin: 5px 0; font-size: 0.9rem; }
-    .mesa-figura .pay-btn { display: block; width: 100%; margin: 5px 0; font-size: 16px; }
+    .mesa-card { background: #1a1a1a; border-radius: 12px; padding: 20px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.4); width: 150px; cursor: pointer; transition: transform 0.2s; }
+    .mesa-card:hover { transform: translateY(-5px); }
+    .mesa-card h4 { color: #d4af37; margin: 0 0 10px 0; font-size: 1.2rem; }
+    .mesa-card p { margin: 5px 0; font-size: 0.9rem; }
+    .mesa-card .pay-btn { display: block; width: 100%; margin: 5px 0; font-size: 16px; }
 
     /* Modal customizado */
     .modal {
@@ -66,11 +66,22 @@
     }
     .modal-content h3 { color: #d4af37; margin-top: 0; }
     .modal-buttons { margin-top: 20px; }
-    .modal-buttons button { margin: 0 10px; padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; }
+    .modal-buttons button { margin: 0 5px; padding: 10px 15px; border: none; border-radius: 6px; cursor: pointer; }
     .modal-ok { background-color: #8e44ad; color: white; }
     .modal-cancel { background-color: #c0392b; color: white; }
-    .total-info { font-size: 1.2rem; font-weight: bold; margin-top: 10px; color: #d4af37; }
-    .checkbox-container { display: flex; align-items: center; justify-content: center; gap: 10px; margin: 10px 0; }
+
+    /* Modal de Detalhes da Mesa */
+    .mesa-modal-content {
+        background-color: #1a1a1a; padding: 20px; border-radius: 12px;
+        width: 90%; max-width: 500px; box-shadow: 0 5px 25px rgba(0,0,0,0.6);
+        text-align: left;
+    }
+    .mesa-modal-content h3 { color: #d4af37; text-align: center; }
+    .mesa-modal-content .list { margin: 10px 0; }
+    .mesa-modal-content .total-info { text-align: right; margin-top: 15px; font-size: 1.2rem; font-weight: bold; }
+    .mesa-modal-content .checkbox-container { display: flex; align-items: center; justify-content: flex-end; gap: 10px; margin: 10px 0; }
+    .mesa-modal-content .pay-buttons-container { display: flex; justify-content: center; gap: 10px; margin-top: 20px; flex-wrap: wrap; }
+    .mesa-modal-content .pay-btn { flex-grow: 1; max-width: 120px; }
   </style>
 </head>
 <body>
@@ -82,7 +93,7 @@
   <button onclick="showTab('dashboard')">📊 Dashboard</button>
 </nav>
 
-<!-- Modal HTML -->
+<!-- Modal Genérico -->
 <div id="customModal" class="modal">
     <div class="modal-content">
         <h3 id="modalMessage"></h3>
@@ -90,6 +101,23 @@
         <div id="modalContent"></div>
     </div>
 </div>
+
+<!-- Modal de Detalhes da Mesa -->
+<div id="mesaDetailsModal" class="modal">
+    <div class="mesa-modal-content">
+        <h3 id="mesaDetailsTitle"></h3>
+        <div id="mesaDetailsList" class="list"></div>
+        <div class="checkbox-container">
+            <input type="checkbox" id="taxCheckbox">
+            <label for="taxCheckbox">Incluir 10%</label>
+        </div>
+        <div class="total-info">
+            Total: <span id="finalTotal">R$0.00</span>
+        </div>
+        <div id="mesaDetailsPayButtons" class="pay-buttons-container"></div>
+    </div>
+</div>
+
 
 <!-- 🧑 Garçom -->
 <section id="garcom">
@@ -150,7 +178,7 @@ let dados = JSON.parse(localStorage.getItem("restaurante")) || {
 function save(){ localStorage.setItem("restaurante",JSON.stringify(dados)); }
 function beep(){ new Audio("https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg").play(); }
 
-// --- Funções para a Modal Customizada ---
+// --- Funções para a Modal Customizada (Genérica) ---
 function showModal(message, isConfirm = false, onConfirm = null) {
     const modal = document.getElementById('customModal');
     const modalMessage = document.getElementById('modalMessage');
@@ -207,7 +235,6 @@ function showEditQuantityModal(mesaIndex, pedidoIndex) {
     okBtn.onclick = () => { 
         const newQtd = parseInt(input.value);
         if (newQtd > 0) {
-            // Lógica para ajustar o estoque (não implementado aqui para simplicidade, mas seria necessário em um sistema real)
             pedido.qtd = newQtd;
             save();
             renderMesas();
@@ -251,8 +278,20 @@ function addPedido(idx){
   let mesaObj=dados.mesas.find(m=>m.numero==mesa&&m.aberta);
   if(!mesaObj){abrirMesa(garcom,mesa); mesaObj=dados.mesas.find(m=>m.numero==mesa&&m.aberta);}
   let produto = dados.estoque.find((p,i) => i === idx);
+  
   if(!produto || produto.qtd<=0){showModal("Estoque insuficiente!");return;}
-  mesaObj.pedidos.push({produto:produto.nome,valor:produto.valor,qtd:1,compra:produto.compra});
+
+  // Encontra o item de pedido na mesa
+  let pedidoExistente = mesaObj.pedidos.find(p => p.produto === produto.nome);
+
+  if (pedidoExistente) {
+      // Se o produto já estiver na lista, apenas aumenta a quantidade
+      pedidoExistente.qtd++;
+  } else {
+      // Caso contrário, adiciona um novo item
+      mesaObj.pedidos.push({produto:produto.nome,valor:produto.valor,qtd:1,compra:produto.compra});
+  }
+
   produto.qtd--;
   save();renderMesas();beep();
 }
@@ -261,7 +300,6 @@ function removerPedido(mesaIndex, pedidoIndex) {
     showModal("Tem certeza que deseja remover este item?", true, () => {
         let mesa = dados.mesas[mesaIndex];
         let pedido = mesa.pedidos[pedidoIndex];
-        // Retornar item ao estoque
         let produtoEstoque = dados.estoque.find(p => p.nome === pedido.produto);
         if (produtoEstoque) {
             produtoEstoque.qtd += pedido.qtd;
@@ -303,65 +341,93 @@ function renderProdutosBtns(){
 
 // 💵 Caixa
 function renderCaixa(){
-  let html="";
-  const mesasAbertasDiv = document.getElementById("mesasAbertas");
-  mesasAbertasDiv.innerHTML = "";
-  dados.mesas.filter(m => m.aberta).forEach((m,i)=>{
-    let total=m.pedidos.reduce((s,p)=>s+p.valor*p.qtd,0);
-    const mesaFigura = document.createElement('div');
-    mesaFigura.className = 'mesa-figura';
-    mesaFigura.dataset.index = i; // Armazena o índice da mesa
-    
-    let pedidosHtml = m.pedidos.map(p => `<li>${p.qtd}x ${p.produto} - R$${(p.valor * p.qtd).toFixed(2)}</li>`).join("");
-
-    mesaFigura.innerHTML = `
-      <h4>Mesa ${m.numero}</h4>
-      <p>Garçom: ${m.garcom}</p>
-      <div style="text-align: left; margin-bottom: 10px;">
-        <ul style="list-style-type: none; padding: 0;">${pedidosHtml}</ul>
-      </div>
-      <p>Subtotal: <b>R$${total.toFixed(2)}</b></p>
-      <div class="checkbox-container">
-        <input type="checkbox" id="tax-${i}" onchange="updateTotal(${i})">
-        <label for="tax-${i}">Incluir 10%</label>
-      </div>
-      <p class="total-info">Total: <span id="final-total-${i}">R$${total.toFixed(2)}</span></p>
-      <button class="pay-btn pay-pix" onclick="encerrarMesa(${i},'Pix')">⚡ Pix</button>
-      <button class="pay-btn pay-debito" onclick="encerrarMesa(${i},'Débito')">💳 Débito</button>
-      <button class="pay-btn pay-credito" onclick="encerrarMesa(${i},'Crédito')">💳 Crédito</button>
-      <button class="pay-btn pay-dinheiro" onclick="encerrarMesa(${i},'Dinheiro')">💵 Dinheiro</button>
-    `;
-    mesasAbertasDiv.appendChild(mesaFigura);
-  });
-  if(mesasAbertasDiv.innerHTML === '') {
-      mesasAbertasDiv.innerHTML = "<p style='width: 100%; text-align: center;'>Nenhuma mesa aberta.</p>";
-  }
+    const mesasAbertasDiv = document.getElementById("mesasAbertas");
+    mesasAbertasDiv.innerHTML = "";
+    const mesasAtivas = dados.mesas.filter(m => m.aberta);
+    if (mesasAtivas.length === 0) {
+        mesasAbertasDiv.innerHTML = "<p style='width: 100%; text-align: center;'>Nenhuma mesa aberta.</p>";
+    } else {
+        mesasAtivas.forEach((m, i) => {
+            const card = document.createElement('div');
+            card.className = 'mesa-card';
+            card.innerHTML = `
+                <h4>Mesa ${m.numero}</h4>
+                <p>Garçom: ${m.garcom}</p>
+            `;
+            card.onclick = () => openMesaDetails(i);
+            mesasAbertasDiv.appendChild(card);
+        });
+    }
 }
 
-function updateTotal(mesaIndex) {
-    let mesa = dados.mesas[mesaIndex];
-    let total = mesa.pedidos.reduce((s, p) => s + p.valor * p.qtd, 0);
-    const checkbox = document.getElementById(`tax-${mesaIndex}`);
-    let finalTotal = total;
-    if (checkbox.checked) {
+function openMesaDetails(mesaIndex) {
+    const mesa = dados.mesas.find((m, i) => i === mesaIndex);
+    if (!mesa) return;
+
+    const modal = document.getElementById('mesaDetailsModal');
+    document.getElementById('mesaDetailsTitle').textContent = `Mesa ${mesa.numero}`;
+    
+    let pedidosHtml = mesa.pedidos.map(p => `
+        <div class="list-item">
+            <span>${p.qtd}x ${p.produto} - R$${(p.valor * p.qtd).toFixed(2)}</span>
+        </div>
+    `).join("");
+    document.getElementById('mesaDetailsList').innerHTML = pedidosHtml || "Nenhum pedido.";
+    
+    const subtotal = mesa.pedidos.reduce((s, p) => s + p.valor * p.qtd, 0);
+    const taxCheckbox = document.getElementById('taxCheckbox');
+    taxCheckbox.checked = false; // Reset checkbox state
+    taxCheckbox.onchange = () => updateFinalTotal(subtotal);
+
+    updateFinalTotal(subtotal);
+    
+    const payButtonsContainer = document.getElementById('mesaDetailsPayButtons');
+    payButtonsContainer.innerHTML = `
+        <button class="pay-btn pay-pix" onclick="encerrarMesa(${mesaIndex}, 'Pix')">⚡ Pix</button>
+        <button class="pay-btn pay-debito" onclick="encerrarMesa(${mesaIndex}, 'Débito')">💳 Débito</button>
+        <button class="pay-btn pay-credito" onclick="encerrarMesa(${mesaIndex}, 'Crédito')">💳 Crédito</button>
+        <button class="pay-btn pay-dinheiro" onclick="encerrarMesa(${mesaIndex}, 'Dinheiro')">💵 Dinheiro</button>
+    `;
+
+    modal.onclick = (e) => {
+        if (e.target.id === 'mesaDetailsModal') {
+            modal.style.display = 'none';
+        }
+    };
+    modal.style.display = 'flex';
+}
+
+function updateFinalTotal(subtotal) {
+    const taxCheckbox = document.getElementById('taxCheckbox');
+    let finalTotal = subtotal;
+    if (taxCheckbox.checked) {
         finalTotal *= 1.1;
     }
-    document.getElementById(`final-total-${mesaIndex}`).textContent = `R$${finalTotal.toFixed(2)}`;
+    document.getElementById('finalTotal').textContent = `R$${finalTotal.toFixed(2)}`;
 }
 
 function encerrarMesa(idx, pagamento){
-  let mesa=dados.mesas.find((m,index) => index === idx);
-  if (!mesa) return;
-  const checkbox = document.getElementById(`tax-${idx}`);
-  let total=mesa.pedidos.reduce((s,p)=>s+p.valor*p.qtd,0);
-  if (checkbox && checkbox.checked) {
-      total *= 1.1;
-  }
-  let lucro=mesa.pedidos.reduce((s,p)=>s+(p.valor-p.compra)*p.qtd,0);
-  dados.vendas.push({mesa:mesa.numero,garcom:mesa.garcom,total,pagamento,data:new Date().toLocaleDateString(),lucro});
-  dados.financeiro.entradas+=total; dados.financeiro.lucro+=lucro; dados.financeiro.saldo+=total;
-  mesa.aberta=false;
-  save();renderCaixa();beep();showModal("✅ Mesa encerrada!");
+    const mesa = dados.mesas.find((m, index) => index === idx);
+    if (!mesa) return;
+
+    let total = mesa.pedidos.reduce((s, p) => s + p.valor * p.qtd, 0);
+    const taxCheckbox = document.getElementById('taxCheckbox');
+    if (taxCheckbox && taxCheckbox.checked) {
+        total *= 1.1;
+    }
+
+    const lucro = mesa.pedidos.reduce((s,p)=>s+(p.valor-p.compra)*p.qtd,0);
+    dados.vendas.push({mesa:mesa.numero, garcom:mesa.garcom, total, pagamento, data: new Date().toLocaleDateString(), lucro});
+    dados.financeiro.entradas+=total;
+    dados.financeiro.lucro+=lucro;
+    dados.financeiro.saldo+=total;
+    mesa.aberta = false;
+
+    save();
+    document.getElementById('mesaDetailsModal').style.display = 'none';
+    renderCaixa();
+    beep();
+    showModal("✅ Mesa encerrada!");
 }
 
 // ⚙️ Admin
