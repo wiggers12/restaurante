@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>DashControl Enterprise FINAL</title>
+  <title>DashControl Enterprise++</title>
   <script src="https://cdn.jsdelivr.net/npm/echarts/dist/echarts.min.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
   <style>
@@ -12,26 +12,26 @@
     nav { display:flex; justify-content:center; flex-wrap:wrap; background:#1e1e1e; }
     nav button { background:#8e44ad; border:none; margin:5px; padding:10px 15px; border-radius:8px; color:white; font-weight:bold; cursor:pointer; }
     nav button:hover { background:#b8860b; }
-    section { display:none; padding:20px; max-width:1000px; margin:auto; }
+    section { display:none; padding:20px; max-width:1100px; margin:auto; }
     h2 { color:#d4af37; margin:15px 0; }
     input, select { padding:10px; border:none; border-radius:6px; width:100%; margin:5px 0; background:#2c2c2c; color:white; }
     .btn { background:#8e44ad; padding:10px; margin:5px; border-radius:6px; cursor:pointer; border:none; color:white; font-weight:bold; }
     .btn:hover { background:#b8860b; }
     .chart-card { background:#1a1a1a; border-radius:12px; padding:15px; margin:20px auto; box-shadow:0 4px 20px rgba(0,0,0,0.6); max-width:1200px; }
     .chart { width:100%; height:400px; }
-    .kpi { background:#1a1a1a; display:inline-block; padding:15px; border-radius:10px; margin:10px; min-width:150px; font-size:14px; }
+    .kpi { background:#1a1a1a; display:inline-block; padding:15px; border-radius:10px; margin:10px; min-width:180px; font-size:14px; }
     .list { background:#1a1a1a; border-radius:8px; padding:10px; margin-top:10px; }
     .list div { padding:6px 0; border-bottom:1px solid #333; }
-    .list div:last-child { border:none; }
   </style>
 </head>
 <body>
-<header>📊 DashControl Enterprise FINAL</header>
+<header>📊 DashControl Enterprise++</header>
 <nav>
   <button onclick="showTab('estoque')">📦 Estoque</button>
   <button onclick="showTab('vendas')">🛒 Vendas</button>
   <button onclick="showTab('financeiro')">💰 Financeiro</button>
   <button onclick="showTab('dashboard')">📈 Dashboard</button>
+  <button onclick="showTab('relatorios')">📑 Relatórios</button>
 </nav>
 
 <!-- 📦 Estoque -->
@@ -40,7 +40,7 @@
   <input type="text" id="estNome" placeholder="Nome do Produto/Serviço">
   <input type="number" id="estCompra" placeholder="Valor de Compra (R$)">
   <input type="number" id="estVenda" placeholder="Valor de Venda (R$)">
-  <input type="number" id="estQtd" placeholder="Quantidade (vazio = serviço)">
+  <input type="number" id="estQtd" placeholder="Quantidade (deixe vazio se for serviço)">
   <button class="btn" onclick="addEstoque()">➕ Adicionar</button>
   <div class="list" id="listaEstoque"></div>
 </section>
@@ -76,11 +76,25 @@
   <div class="kpi">Receita Total: R$ <span id="kpiReceita">0</span></div>
   <div class="kpi">Lucro Total: R$ <span id="kpiLucro">0</span></div>
   <div class="kpi">Ticket Médio: R$ <span id="kpiTicket">0</span></div>
+  <div class="kpi">Margem Média: <span id="kpiMargem">0%</span></div>
   <div class="chart-card"><div id="chartVendas" class="chart"></div></div>
   <div class="chart-card"><div id="chartFinanceiro" class="chart"></div></div>
   <div class="chart-card"><div id="chartEstoque" class="chart"></div></div>
   <div class="chart-card"><div id="chartPagamentos" class="chart"></div></div>
   <div class="chart-card"><div id="chartLinha" class="chart"></div></div>
+  <div class="chart-card"><div id="chartLucro" class="chart"></div></div>
+</section>
+
+<!-- 📑 Relatórios -->
+<section id="relatorios">
+  <h2>📑 Relatórios</h2>
+  <label>Data inicial:</label>
+  <input type="date" id="dataInicio">
+  <label>Data final:</label>
+  <input type="date" id="dataFim">
+  <button class="btn" onclick="gerarRelatorio()">📊 Gerar Relatório</button>
+  <button class="btn" onclick="exportCSV()">⬇ Exportar CSV</button>
+  <div class="list" id="resultadoRelatorio"></div>
 </section>
 
 <script>
@@ -95,6 +109,8 @@ function showTab(tab){
   if(tab==="financeiro") renderFinanceiro();
   if(tab==="dashboard") renderDashboard();
 }
+
+// Salvar Local
 function save(){ localStorage.setItem("enterprise",JSON.stringify(dados)); }
 
 // 📦 Estoque
@@ -103,12 +119,16 @@ function addEstoque(){
   let compra=parseFloat(document.getElementById("estCompra").value)||0;
   let venda=parseFloat(document.getElementById("estVenda").value)||0;
   let qtd=document.getElementById("estQtd").value===""?null:parseInt(document.getElementById("estQtd").value);
-  if(!nome||!venda){alert("Preencha todos os campos obrigatórios!");return;}
+  if(!nome||!venda){alert("Preencha nome e valor de venda!");return;}
   dados.estoque.push({nome,compra,venda,qtd});
   save(); renderEstoque(); alert("✅ Produto adicionado!");
 }
 function renderEstoque(){
-  let html=""; dados.estoque.forEach((e,i)=>{html+=`<div>${e.nome} - Compra R$${e.compra} | Venda R$${e.venda} | Qtd: ${e.qtd??'Serviço'}</div>`;});
+  let html=""; 
+  dados.estoque.forEach((e,i)=>{
+    let margem = e.compra ? (((e.venda-e.compra)/e.compra)*100).toFixed(1)+"%" : "—";
+    html+=`<div>${e.nome} - Compra R$${e.compra} | Venda R$${e.venda} | Qtd: ${e.qtd??'Serviço'} | Margem: ${margem}</div>`;
+  });
   document.getElementById("listaEstoque").innerHTML=html||"<p>Sem itens.</p>";
   let sel=document.getElementById("venProduto"); sel.innerHTML="";
   dados.estoque.forEach((p,i)=>{let opt=document.createElement("option");opt.value=i;opt.textContent=`${p.nome} (R$${p.venda})`;sel.appendChild(opt);});
@@ -117,7 +137,6 @@ function renderEstoque(){
 // 🛒 Vendas
 function addVenda(){
   let idx=document.getElementById("venProduto").value;
-  if(idx===""){alert("Selecione um produto!");return;}
   let prod=dados.estoque[idx];
   let valor=prod.venda;
   let pagamento=document.getElementById("venPagamento").value;
@@ -133,7 +152,7 @@ function addVenda(){
   save(); renderVendas(); alert("✅ Venda registrada!");
 }
 function renderVendas(){
-  let html=""; dados.vendas.slice(-5).forEach(v=>{html+=`<div>${v.data} - ${v.produto} - R$${v.valor} (${v.pagamento}) [Lucro R$${v.lucro}]</div>`;});
+  let html=""; dados.vendas.slice(-5).forEach(v=>{html+=`<div>${v.data} | ${v.produto} - R$${v.valor} (${v.pagamento}) [Lucro R$${v.lucro}]</div>`;});
   document.getElementById("listaVendas").innerHTML=html||"<p>Sem vendas.</p>";
 }
 
@@ -154,7 +173,10 @@ function renderFinanceiro(){
 function renderDashboard(){
   document.getElementById("kpiReceita").innerText=dados.financeiro.entradas.toFixed(2);
   document.getElementById("kpiLucro").innerText=dados.financeiro.lucro.toFixed(2);
-  document.getElementById("kpiTicket").innerText=(dados.vendas.length?(dados.financeiro.entradas/dados.vendas.length):0).toFixed(2);
+  document.getElementById("kpiTicket").innerText=(dados.financeiro.entradas/(dados.vendas.length||1)).toFixed(2);
+  let margemMedia=0;
+  if(dados.vendas.length){margemMedia=(dados.vendas.reduce((s,v)=>s+v.lucro,0)/dados.vendas.reduce((s,v)=>s+v.valor,0))*100;}
+  document.getElementById("kpiMargem").innerText=margemMedia.toFixed(1)+"%";
 
   // Vendas por Produto
   let porProd={}; dados.vendas.forEach(v=>{porProd[v.produto]=(porProd[v.produto]||0)+v.valor;});
@@ -167,7 +189,7 @@ function renderDashboard(){
 
   // Financeiro
   echarts.init(document.getElementById("chartFinanceiro")).setOption({
-    title:{text:"💰 Entradas x Saídas",textStyle:{color:"#d4af37"}},
+    title:{text:"💰 Financeiro",textStyle:{color:"#d4af37"}},
     xAxis:{type:"category",data:["Entradas","Saídas","Lucro"],axisLabel:{color:"#fff"}},
     yAxis:{type:"value",axisLabel:{color:"#fff"}},
     series:[{type:"bar",data:[dados.financeiro.entradas,dados.financeiro.saidas,dados.financeiro.lucro],label:{show:true,color:"#fff"}}]
@@ -196,6 +218,35 @@ function renderDashboard(){
     yAxis:{type:"value",axisLabel:{color:"#fff"}},
     series:[{type:"line",data:Object.values(porData),smooth:true,areaStyle:{color:"rgba(212,175,55,0.3)"},label:{show:true,color:"#fff"}}]
   });
+
+  // Lucro no Tempo
+  let lucroData={}; dados.vendas.forEach(v=>{lucroData[v.data]=(lucroData[v.data]||0)+v.lucro;});
+  echarts.init(document.getElementById("chartLucro")).setOption({
+    title:{text:"📈 Lucro no Tempo",textStyle:{color:"#d4af37"}},
+    xAxis:{type:"category",data:Object.keys(lucroData),axisLabel:{color:"#fff"}},
+    yAxis:{type:"value",axisLabel:{color:"#fff"}},
+    series:[{type:"line",data:Object.values(lucroData),smooth:true,areaStyle:{color:"rgba(46,204,113,0.3)"},label:{show:true,color:"#fff"}}]
+  });
+}
+
+// 📑 Relatórios
+function gerarRelatorio(){
+  let ini=document.getElementById("dataInicio").value;
+  let fim=document.getElementById("dataFim").value;
+  let filtradas=dados.vendas.filter(v=>(!ini||v.data>=ini)&&(!fim||v.data<=fim));
+  let html="";
+  let total=0;
+  filtradas.forEach(v=>{total+=v.valor; html+=`<div>${v.data} - ${v.produto} R$${v.valor} (${v.pagamento})</div>`;});
+  document.getElementById("resultadoRelatorio").innerHTML=html||"<p>Nenhum dado encontrado.</p>";
+}
+function exportCSV(){
+  let rows=[["Data","Produto","Valor","Pagamento","Lucro"]];
+  dados.vendas.forEach(v=>{rows.push([v.data,v.produto,v.valor,v.pagamento,v.lucro]);});
+  let csv=rows.map(r=>r.join(",")).join("\n");
+  let blob=new Blob([csv],{type:"text/csv"});
+  let url=URL.createObjectURL(blob);
+  let a=document.createElement("a");
+  a.href=url;a.download="relatorio.csv";a.click();
 }
 
 // Inicialização
