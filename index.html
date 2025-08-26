@@ -24,13 +24,11 @@
     .list-item-buttons { display: flex; gap: 5px; }
     .chart-card { background:#1a1a1a; border-radius:12px; padding:15px; margin:20px auto; box-shadow:0 4px 20px rgba(0,0,0,0.6); max-width:1200px; }
     .chart { width:100%; height:400px; }
-    /* Estilos para os botões de produto menores */
     .produtos-container { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 20px; }
     .prod-btn { font-size:16px; padding:10px; margin:0; border:none; border-radius:10px; background:#2c2c2c; color:white; cursor:pointer; width:100px; height:90px; display:flex; flex-direction:column; align-items:center; justify-content:center; }
     .prod-btn:hover { background:#8e44ad; transform:scale(1.05); }
     .prod-btn .icon { font-size: 2em; }
     .prod-btn .details { font-size: 0.8em; line-height: 1.2; text-align: center; }
-    
     .pay-btn { font-size:16px; padding:10px; margin:5px; border:none; border-radius:8px; cursor:pointer; width:100px; color:white; }
     .pay-pix { background:#27ae60; } .pay-debito { background:#2980b9; } .pay-credito { background:#8e44ad; } .pay-dinheiro { background:#f39c12; }
     .pay-btn:hover { opacity:0.9; transform:scale(1.05); }
@@ -49,14 +47,12 @@
     .remove-btn { background: #c0392b; }
     .edit-btn:hover { background: #34495e; }
     .remove-btn:hover { background: #e74c3c; }
-
     .mesas-container { display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; }
     .mesa-card { background: #1a1a1a; border-radius: 12px; padding: 20px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.4); width: 150px; cursor: pointer; transition: transform 0.2s; }
     .mesa-card:hover { transform: translateY(-5px); }
     .mesa-card h4 { color: #d4af37; margin: 0 0 10px 0; font-size: 1.2rem; }
     .mesa-card p { margin: 5px 0; font-size: 0.9rem; }
     .mesa-card .pay-btn { display: block; width: 100%; margin: 5px 0; font-size: 16px; }
-
     .modal {
         display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%;
         background-color: rgba(0,0,0,0.8); justify-content: center; align-items: center;
@@ -70,7 +66,6 @@
     .modal-buttons button { margin: 0 5px; padding: 10px 15px; border: none; border-radius: 6px; cursor: pointer; }
     .modal-ok { background-color: #8e44ad; color: white; }
     .modal-cancel { background-color: #c0392b; color: white; }
-
     .mesa-modal-content {
         background-color: #1a1a1a; padding: 20px; border-radius: 12px;
         width: 90%; max-width: 500px; box-shadow: 0 5px 25px rgba(0,0,0,0.6);
@@ -82,7 +77,6 @@
     .mesa-modal-content .checkbox-container { display: flex; align-items: center; justify-content: flex-end; gap: 10px; margin: 10px 0; }
     .mesa-modal-content .pay-buttons-container { display: flex; justify-content: center; gap: 10px; margin-top: 20px; flex-wrap: wrap; }
     .mesa-modal-content .pay-btn { flex-grow: 1; max-width: 120px; }
-
     .back-btn {
         background: #1a1a1a;
         color: #fff;
@@ -94,7 +88,6 @@
         margin-bottom: 20px;
     }
     .back-btn:hover { background: #333; }
-
     .welcome-card {
         background: #1a1a1a;
         border-radius: 12px;
@@ -104,7 +97,6 @@
         max-width: 400px;
         margin: 50px auto;
     }
-
     .welcome-card img {
         width: 120px;
         height: 120px;
@@ -112,7 +104,6 @@
         border-radius: 50%;
         object-fit: cover;
     }
-
     @media (max-width: 600px) {
         nav { flex-direction: column; align-items: center; }
         nav button { width: 90%; }
@@ -337,7 +328,11 @@ function showEditQuantityModal(mesaIndex, pedidoIndex) {
 
 function showTab(tab){
   document.querySelectorAll("section").forEach(s=>s.style.display="none");
-  document.getElementById(tab).style.display="block";
+  const targetSection = document.getElementById(tab);
+  if (targetSection) {
+    targetSection.style.display="block";
+  }
+  
   if(tab==="garcom"){ showInitialGarcomView(); }
   if(tab==="caixa") renderCaixa();
   if(tab==="admin"){renderEstoque();renderGarcons();}
@@ -347,17 +342,22 @@ function showTab(tab){
 let currentMesaIndex = -1;
 
 function showInitialGarcomView() {
-    document.getElementById('garcomInitialView').style.display = 'block';
-    document.getElementById('garcomDetailView').style.display = 'none';
+    const garcomInitialView = document.getElementById('garcomInitialView');
+    const garcomDetailView = document.getElementById('garcomDetailView');
+    if(garcomInitialView) garcomInitialView.style.display = 'block';
+    if(garcomDetailView) garcomDetailView.style.display = 'none';
     renderGarcomSelect();
     renderMesasAbertasGarcom();
 }
 
 function openMesaDetailsGarcom(mesaIndex) {
     currentMesaIndex = mesaIndex;
-    document.getElementById('garcomInitialView').style.display = 'none';
-    document.getElementById('garcomDetailView').style.display = 'block';
-    document.getElementById('detalhesMesaTitle').textContent = `Mesa ${dados.mesas[mesaIndex].numero}`;
+    const garcomInitialView = document.getElementById('garcomInitialView');
+    const garcomDetailView = document.getElementById('garcomDetailView');
+    if(garcomInitialView) garcomInitialView.style.display = 'none';
+    if(garcomDetailView) garcomDetailView.style.display = 'block';
+    const detalhesMesaTitle = document.getElementById('detalhesMesaTitle');
+    if(detalhesMesaTitle) detalhesMesaTitle.textContent = `Mesa ${dados.mesas[mesaIndex].numero}`;
     renderGarconsDaMesa();
     renderProdutosBtns();
     renderPedidosGarcom(mesaIndex);
@@ -374,7 +374,7 @@ function abrirMesa(garcom,mesa){
   }
   dados.mesas.push({numero:mesa,garcons:[garcom],pedidos:[],aberta:true});
   save();
-  showInitialGarcomView(); // Atualiza a visualização para mostrar a nova mesa
+  showInitialGarcomView(); 
   beep();
 }
 
@@ -434,11 +434,11 @@ function renderMesasAbertasGarcom() {
     const mesasAtivas = dados.mesas.filter(m => m.aberta);
     
     if (mesasAtivas.length === 0) {
-        mesasContainer.innerHTML = "";
-        welcomeCard.style.display = 'block';
+        if (mesasContainer) mesasContainer.innerHTML = "";
+        if (welcomeCard) welcomeCard.style.display = 'block';
     } else {
-        welcomeCard.style.display = 'none';
-        mesasContainer.innerHTML = "";
+        if (welcomeCard) welcomeCard.style.display = 'none';
+        if (mesasContainer) mesasContainer.innerHTML = "";
         mesasAtivas.forEach((m, i) => {
             const card = document.createElement('div');
             card.className = 'mesa-card';
@@ -447,13 +447,14 @@ function renderMesasAbertasGarcom() {
                 <p>Garçons: ${m.garcons.join(", ")}</p>
             `;
             card.onclick = () => openMesaDetailsGarcom(i);
-            mesasContainer.appendChild(card);
+            if (mesasContainer) mesasContainer.appendChild(card);
         });
     }
 }
 
 function renderPedidosGarcom(mesaIndex){
     const listaPedidos = document.getElementById('listaPedidosGarcom');
+    if (!listaPedidos) return;
     listaPedidos.innerHTML = '';
     const mesa = dados.mesas[mesaIndex];
     let pedidosHtml = mesa.pedidos.map((p, pedidoIndex) => `
@@ -469,8 +470,8 @@ function renderPedidosGarcom(mesaIndex){
 }
 
 function renderGarcomSelect(){
-  let sel=document.getElementById("garcomNome");
-  let selDetalhe=document.getElementById("garcomAdicionarSelect");
+  const sel=document.getElementById("garcomNome");
+  const selDetalhe=document.getElementById("garcomAdicionarSelect");
   
   if (sel) {
       sel.innerHTML="";
@@ -496,14 +497,18 @@ function renderGarcomSelect(){
 function renderGarconsDaMesa() {
     const garconsDaMesaDiv = document.getElementById('garconsDaMesa');
     const mesa = dados.mesas[currentMesaIndex];
-    if (mesa) {
-        garconsDaMesaDiv.innerHTML = `Garçons: ${mesa.garcons.join(", ")}`;
-    } else {
-        garconsDaMesaDiv.innerHTML = '';
+    if (garconsDaMesaDiv) {
+        if (mesa) {
+            garconsDaMesaDiv.innerHTML = `Garçons: ${mesa.garcons.join(", ")}`;
+        } else {
+            garconsDaMesaDiv.innerHTML = '';
+        }
     }
 }
 function renderProdutosBtns(){
-  let div=document.getElementById("produtosBtns"); div.innerHTML="";
+  let div=document.getElementById("produtosBtns");
+  if (!div) return;
+  div.innerHTML="";
   dados.estoque.forEach((p,i)=>{
     div.innerHTML+=`
     <button class="prod-btn" onclick="addPedido(${i})">
@@ -539,7 +544,7 @@ function toggleCaixaView(view) {
 
 function renderMesasAbertas(){
     const mesasAbertasDiv = document.getElementById("mesasAbertas");
-    if (!mesasAbertasDiv) return; // Adicionado verificação de nulidade
+    if (!mesasAbertasDiv) return;
     mesasAbertasDiv.innerHTML = "";
     const mesasAtivas = dados.mesas.filter(m => m.aberta);
     if (mesasAtivas.length === 0) {
@@ -560,7 +565,7 @@ function renderMesasAbertas(){
 
 function renderRelatorioVendas() {
     const listaVendas = document.getElementById('listaVendas');
-    if (!listaVendas) return; // Adicionado verificação de nulidade
+    if (!listaVendas) return;
     listaVendas.innerHTML = "";
     if (dados.vendas.length === 0) {
         listaVendas.innerHTML = "<p>Nenhuma venda registrada.</p>";
@@ -582,6 +587,7 @@ function openMesaDetails(mesaIndex) {
     if (!mesa) return;
 
     const modal = document.getElementById('mesaDetailsModal');
+    if (!modal) return;
     document.getElementById('mesaDetailsTitle').textContent = `Mesa ${mesa.numero}`;
     
     let pedidosHtml = mesa.pedidos.map(p => `
@@ -610,14 +616,12 @@ function openMesaDetails(mesaIndex) {
       `;
     }
 
-    if (modal) {
-      modal.onclick = (e) => {
-          if (e.target.id === 'mesaDetailsModal') {
-              modal.style.display = 'none';
-          }
-      };
-      modal.style.display = 'flex';
-    }
+    modal.onclick = (e) => {
+        if (e.target.id === 'mesaDetailsModal') {
+            modal.style.display = 'none';
+        }
+    };
+    modal.style.display = 'flex';
 }
 
 function updateFinalTotal(subtotal) {
@@ -644,19 +648,19 @@ function showPaymentConfirmation(mesaIndex, pagamento) {
     }
 
     const confirmPaymentModal = document.getElementById('confirmPaymentModal');
-    if (confirmPaymentModal) {
-      document.getElementById('confirmPaymentTitle').textContent = `Confirmação de Pagamento`;
-      document.getElementById('confirmPaymentInfo').innerHTML = `
-          Mesa: ${mesa.numero}<br>
-          Total: R$${total.toFixed(2)}<br>
-          Forma de Pagamento: ${pagamento}
-      `;
-      const confirmBtn = document.getElementById('confirmPaymentBtn');
-      if (confirmBtn) {
-          confirmBtn.onclick = () => encerrarMesa(mesaIndex, pagamento);
-      }
-      confirmPaymentModal.style.display = 'flex';
+    if (!confirmPaymentModal) return;
+    document.getElementById('confirmPaymentTitle').textContent = `Confirmação de Pagamento`;
+    document.getElementById('confirmPaymentInfo').innerHTML = `
+        Mesa: ${mesa.numero}<br>
+        Total: R$${total.toFixed(2)}<br>
+        Forma de Pagamento: ${pagamento}
+    `;
+    
+    const confirmBtn = document.getElementById('confirmPaymentBtn');
+    if (confirmBtn) {
+        confirmBtn.onclick = () => encerrarMesa(mesaIndex, pagamento);
     }
+    confirmPaymentModal.style.display = 'flex';
 }
 
 function encerrarMesa(idx, pagamento){
@@ -684,7 +688,7 @@ function encerrarMesa(idx, pagamento){
     const confirmPaymentModal = document.getElementById('confirmPaymentModal');
     if (confirmPaymentModal) confirmPaymentModal.style.display = 'none';
 
-    renderCaixa(); // Atualiza a tela do Caixa para remover a mesa fechada
+    renderCaixa();
     beep();
     showModal("✅ Mesa encerrada!");
 }
@@ -777,42 +781,57 @@ function renderGarcons(){
 }
 
 function renderDashboard(){
-  document.getElementById("kpiReceita").innerText=dados.financeiro.entradas.toFixed(2);
-  document.getElementById("kpiLucro").innerText=dados.financeiro.lucro.toFixed(2);
-  document.getElementById("kpiTicket").innerText=(dados.financeiro.entradas/(dados.vendas.length||1)).toFixed(2);
-  document.getElementById("kpiEstoque").innerText=dados.estoque.reduce((s,p)=>s+p.qtd,0);
-  let porProd={}; dados.vendas.forEach(v=>{porProd[v.mesa]=(porProd[v.mesa]||0)+v.total;});
-  echarts.init(document.getElementById("chartVendas")).setOption({
-    title:{text:"Vendas por Mesa",textStyle:{color:"#d4af37"}},
-    xAxis:{type:"category",data:Object.keys(porProd),axisLabel:{color:"#fff"}},
-    yAxis:{type:"value",axisLabel:{color:"#fff"}},
-    series:[{type:"bar",data:Object.values(porProd),label:{show:true,color:"#fff"}}]
-  });
-  let porGarcom={}; dados.vendas.forEach(v=>{v.garcons.forEach(g => {porGarcom[g]=(porGarcom[g]||0)+v.total;});});
-  echarts.init(document.getElementById("chartGarcons")).setOption({
-    title:{text:"Vendas por Garçom",textStyle:{color:"#d4af37"}},
-    xAxis:{type:"category",data:Object.keys(porGarcom),axisLabel:{color:"#fff"}},
-    yAxis:{type:"value",axisLabel:{color:"#fff"}},
-    series:[{type:"bar",data:Object.values(porGarcom),label:{show:true,color:"#fff"}}]
-  });
-  let formas={}; dados.vendas.forEach(v=>{formas[v.pagamento]=(formas[v.pagamento]||0)+v.total;});
-  echarts.init(document.getElementById("chartPagamentos")).setOption({
-    title:{text:"Formas de Pagamento",textStyle:{color:"#d4af37"}},
-    series:[{type:"pie",radius:["40%","70%"],data:Object.entries(formas).map(([k,v])=>({name:k,value:v})),label:{show:true,color:"#fff"}}]
-  });
-  let porData={}; dados.vendas.forEach(v=>{porData[v.data]=(porData[v.data]||0)+v.total;});
-  echarts.init(document.getElementById("chartLinha")).setOption({
-    title:{text:"Receita no Tempo",textStyle:{color:"#d4af37"}},
-    xAxis:{type:"category",data:Object.keys(porData).sort(),axisLabel:{color:"#fff"}},
-    yAxis:{type:"value",axisLabel:{color:"#fff"}},
-    series:[{type:"line",data:Object.values(porData),smooth:true,areaStyle:{color:"rgba(212,175,55,0.3)"},label:{show:true,color:"#fff"}}]
-  });
-  echarts.init(document.getElementById("chartEstoque")).setOption({
-    title:{text:"Estoque Atual",textStyle:{color:"#d4af37"}},
-    xAxis:{type:"category",data:dados.estoque.map(p=>p.nome),axisLabel:{color:"#fff"}},
-    yAxis:{type:"value",axisLabel:{color:"#fff"}},
-    series:[{type:"bar",data:dados.estoque.map(p=>p.qtd),label:{show:true,color:"#fff"}}]
-  });
+    const kpiReceita = document.getElementById("kpiReceita");
+    const kpiLucro = document.getElementById("kpiLucro");
+    const kpiTicket = document.getElementById("kpiTicket");
+    const kpiEstoque = document.getElementById("kpiEstoque");
+    
+    if (kpiReceita) kpiReceita.innerText=dados.financeiro.entradas.toFixed(2);
+    if (kpiLucro) kpiLucro.innerText=dados.financeiro.lucro.toFixed(2);
+    if (kpiTicket) kpiTicket.innerText=(dados.financeiro.entradas/(dados.vendas.length||1)).toFixed(2);
+    if (kpiEstoque) kpiEstoque.innerText=dados.estoque.reduce((s,p)=>s+p.qtd,0);
+
+    let porProd={}; dados.vendas.forEach(v=>{porProd[v.mesa]=(porProd[v.mesa]||0)+v.total;});
+    const chartVendas = document.getElementById("chartVendas");
+    if(chartVendas) echarts.init(chartVendas).setOption({
+      title:{text:"Vendas por Mesa",textStyle:{color:"#d4af37"}},
+      xAxis:{type:"category",data:Object.keys(porProd),axisLabel:{color:"#fff"}},
+      yAxis:{type:"value",axisLabel:{color:"#fff"}},
+      series:[{type:"bar",data:Object.values(porProd),label:{show:true,color:"#fff"}}]
+    });
+
+    let porGarcom={}; dados.vendas.forEach(v=>{v.garcons.forEach(g => {porGarcom[g]=(porGarcom[g]||0)+v.total;});});
+    const chartGarcons = document.getElementById("chartGarcons");
+    if(chartGarcons) echarts.init(chartGarcons).setOption({
+      title:{text:"Vendas por Garçom",textStyle:{color:"#d4af37"}},
+      xAxis:{type:"category",data:Object.keys(porGarcom),axisLabel:{color:"#fff"}},
+      yAxis:{type:"value",axisLabel:{color:"#fff"}},
+      series:[{type:"bar",data:Object.values(porGarcom),label:{show:true,color:"#fff"}}]
+    });
+
+    let formas={}; dados.vendas.forEach(v=>{formas[v.pagamento]=(formas[v.pagamento]||0)+v.total;});
+    const chartPagamentos = document.getElementById("chartPagamentos");
+    if(chartPagamentos) echarts.init(chartPagamentos).setOption({
+      title:{text:"Formas de Pagamento",textStyle:{color:"#d4af37"}},
+      series:[{type:"pie",radius:["40%","70%"],data:Object.entries(formas).map(([k,v])=>({name:k,value:v})),label:{show:true,color:"#fff"}}]
+    });
+
+    let porData={}; dados.vendas.forEach(v=>{porData[v.data]=(porData[v.data]||0)+v.total;});
+    const chartLinha = document.getElementById("chartLinha");
+    if(chartLinha) echarts.init(chartLinha).setOption({
+      title:{text:"Receita no Tempo",textStyle:{color:"#d4af37"}},
+      xAxis:{type:"category",data:Object.keys(porData).sort(),axisLabel:{color:"#fff"}},
+      yAxis:{type:"value",axisLabel:{color:"#fff"}},
+      series:[{type:"line",data:Object.values(porData),smooth:true,areaStyle:{color:"rgba(212,175,55,0.3)"},label:{show:true,color:"#fff"}}]
+    });
+
+    const chartEstoque = document.getElementById("chartEstoque");
+    if(chartEstoque) echarts.init(chartEstoque).setOption({
+      title:{text:"Estoque Atual",textStyle:{color:"#d4af37"}},
+      xAxis:{type:"category",data:dados.estoque.map(p=>p.nome),axisLabel:{color:"#fff"}},
+      yAxis:{type:"value",axisLabel:{color:"#fff"}},
+      series:[{type:"bar",data:dados.estoque.map(p=>p.qtd),label:{show:true,color:"#fff"}}]
+    });
 }
 
 document.addEventListener('DOMContentLoaded', () => {
