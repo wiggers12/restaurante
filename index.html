@@ -35,7 +35,7 @@
 <!-- 🧑 Garçom -->
 <section id="garcom">
   <h2>🧑 Área do Garçom</h2>
-  <input type="text" id="garcomNome" placeholder="Nome do Garçom">
+  <select id="garcomNome"></select>
   <input type="number" id="mesaNumero" placeholder="Número da Mesa">
   <select id="pedidoProduto"></select>
   <input type="number" id="pedidoQtd" placeholder="Qtd">
@@ -85,7 +85,7 @@ function save(){ localStorage.setItem("restaurante",JSON.stringify(dados)); }
 function showTab(tab){
   document.querySelectorAll("section").forEach(s=>s.style.display="none");
   document.getElementById(tab).style.display="block";
-  if(tab==="garcom") renderMesas();
+  if(tab==="garcom") { renderMesas(); renderGarcomSelect(); renderProdutosSelect(); }
   if(tab==="caixa") renderCaixa();
   if(tab==="admin"){renderEstoque();renderGarcons();}
   if(tab==="dashboard") renderDashboard();
@@ -119,6 +119,10 @@ function renderMesas(){
   });
   document.getElementById("listaMesas").innerHTML=html||"<p>Sem mesas abertas.</p>";
   renderProdutosSelect();
+}
+function renderGarcomSelect(){
+  let sel=document.getElementById("garcomNome"); sel.innerHTML="";
+  dados.garcons.forEach(g=>{let opt=document.createElement("option"); opt.value=g; opt.textContent=g; sel.appendChild(opt);});
 }
 
 // 💵 Caixa
@@ -174,9 +178,9 @@ function renderGarcons(){
 // 📊 Dashboard
 function renderDashboard(){
   // Vendas por Produto
-  let porProd={}; dados.mesas.forEach(m=>m.pedidos.forEach(p=>{porProd[p.produto]=(porProd[p.produto]||0)+p.qtd;}));
+  let porProd={}; dados.vendas.forEach(v=>{porProd[v.mesa]=(porProd[v.mesa]||0)+v.total;});
   echarts.init(document.getElementById("chartVendas")).setOption({
-    title:{text:"Vendas por Produto",textStyle:{color:"#d4af37"}},
+    title:{text:"Vendas por Mesa",textStyle:{color:"#d4af37"}},
     xAxis:{type:"category",data:Object.keys(porProd),axisLabel:{color:"#fff"}},
     yAxis:{type:"value",axisLabel:{color:"#fff"}},
     series:[{type:"bar",data:Object.values(porProd),label:{show:true,color:"#fff"}}]
